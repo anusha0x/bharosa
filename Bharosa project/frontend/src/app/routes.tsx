@@ -7,6 +7,7 @@ import { EligibilityDashboard } from "./components/EligibilityDashboard";
 import { ScholarshipDetailPage } from "./components/ScholarshipDetailPage";
 import { DocumentUploadPage } from "./components/DocumentUploadPage";
 import { ApplicationTracker } from "./components/ApplicationTracker";
+import DigiLockerPage from "./components/DigiLockerPage";
 
 export const router = createBrowserRouter([
   {
@@ -15,6 +16,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: HomePage },
       { path: "login", Component: LoginPage },
+      { path: "digilocker", Component: DigiLockerPage },
       { path: "student-details", Component: StudentDetailsForm },
       { path: "scholarships", Component: EligibilityDashboard },
       { path: "scholarship/:id", Component: ScholarshipDetailPage },
