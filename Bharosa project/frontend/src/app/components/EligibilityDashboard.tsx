@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router";
 import { Award, TrendingUp, Clock, FileText, Filter, Search, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { getAllSchemes, getRankedSchemes } from "../../api/schemes";
@@ -33,56 +33,111 @@ export function EligibilityDashboard() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [mlUsed, setMlUsed] = useState(false);
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
   const profileFromNav = location.state?.profile;
 
+  // ── Save profile to localStorage whenever it arrives from navigation ────────
+  // This means even if user refreshes the page, their profile is preserved
   useEffect(() => {
-    loadScholarships();
-  }, []);
+    if (profileFromNav) {
+      localStorage.setItem("bharosa_profile", JSON.stringify(profileFromNav));
+    }
+  }, [profileFromNav]);
+
+  // ── Run loadScholarships when profileFromNav arrives OR on first mount ───────
+  // Using a ref to avoid double-calling on mount
+  const hasLoaded = useRef(false);
+  useEffect(() => {
+    // Get profile from nav state OR from localStorage
+    const profile = profileFromNav ||
+      JSON.parse(localStorage.getItem("bharosa_profile") || "null");
+    loadScholarships(profile);
+    hasLoaded.current = true;
+  }, [profileFromNav]); // re-runs when profile arrives from form
 
   useEffect(() => {
     const q = search.toLowerCase();
-    setFiltered(q ? scholarships.filter(s => s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q)) : scholarships);
+    setFiltered(q
+      ? scholarships.filter(s =>
+          s.name.toLowerCase().includes(q) ||
+          s.category.toLowerCase().includes(q)
+        )
+      : scholarships
+    );
   }, [search, scholarships]);
 
-  const loadScholarships = async () => {
+  // ── Main load function — accepts profile directly to avoid stale closure ─────
+  const loadScholarships = async (profile?: any) => {
     setLoading(true); setError("");
+
+    // Resolve profile: passed directly > localStorage > null
+    const resolvedProfile = profile ||
+      JSON.parse(localStorage.getItem("bharosa_profile") || "null");
+
     try {
-      // Try ML ranking first if we have profile data
-      const profile = profileFromNav;
-      if (profile && profile.income && profile.state && profile.category) {
+      // ── Step 1: Try ML ranking if profile exists ──────────────────────────
+      if (resolvedProfile?.income && resolvedProfile?.state && resolvedProfile?.category) {
         try {
+          console.log("🤖 Calling ML API with profile:", resolvedProfile);
           const mlResults = await getRankedSchemes({
             user_id: user?._id || "guest",
-            income: INCOME_MAP[profile.income] || 200000,
-            state: profile.state,
-            category: profile.category,
-            academic_year: AY_MAP[profile.academicYear] || 1,
-            has_caste_cert: ["SC","ST","OBC"].includes(profile.category) ? 1 : 0,
+            income: INCOME_MAP[resolvedProfile.income] || 200000,
+            state: resolvedProfile.state,
+            category: resolvedProfile.category,
+            academic_year: AY_MAP[resolvedProfile.academicYear] || 1,
+            has_caste_cert: ["SC", "ST", "OBC"].includes(resolvedProfile.category) ? 1 : 0,
             has_income_cert: 1,
             has_marksheet: 1,
           });
-          const mapped: Scholarship[] = mlResults.map((r: any) => ({
-            id: r.scheme_id,
-            name: r.scheme_name,
-            match: Math.round(r.probability * 100),
-            amount: "₹ As per scheme",
-            deadline: "See details",
-            description: r.eligible ? `${r.confidence} confidence match for your profile` : "Not eligible based on your profile",
-            category: "ML-Ranked",
-            eligibility: [profile.category, profile.state, profile.income],
-            eligible: r.eligible,
-            confidence: r.confidence,
-          })).filter((s: Scholarship) => s.eligible);
+
+          console.log("✅ ML Results:", mlResults);
+
+          const mapped: Scholarship[] = mlResults
+            .map((r: any) => ({
+              id: r.scheme_id,
+              name: r.scheme_name,
+              match: Math.round(r.probability * 100),
+              amount: "₹ As per scheme",
+              deadline: "See details",
+              description: r.eligible
+                ? `${r.confidence} confidence match for your profile`
+                : "Not eligible based on your profile",
+              category: "ML-Ranked",
+              eligibility: [
+                resolvedProfile.category,
+                resolvedProfile.state,
+                resolvedProfile.income,
+              ],
+              eligible: r.eligible,
+              confidence: r.confidence,
+            }))
+            .filter((s: Scholarship) => s.eligible);
+
           if (mapped.length > 0) {
-            setScholarships(mapped); setMlUsed(true); setLoading(false); return;
+            setScholarships(mapped);
+            setMlUsed(true);
+            setLoading(false);
+            return;
+          } else {
+            console.log("⚠️ ML returned 0 eligible schemes, falling to backend");
           }
-        } catch { /* fall through to backend */ }
+        } catch (mlError) {
+          console.error("❌ ML API failed:", mlError);
+          // Fall through to backend
+        }
       }
 
-      // Fallback to backend schemes API
-      const data = await getAllSchemes({ limit: 20, ...(profile?.state && { state: profile.state }), ...(profile?.category && { category: profile.category }) });
+      // ── Step 2: Fallback to backend schemes API ───────────────────────────
+      console.log("📦 Fetching from backend API...");
+      const data = await getAllSchemes({
+        limit: 20,
+        ...(resolvedProfile?.state && { state: resolvedProfile.state }),
+        ...(resolvedProfile?.category && { category: resolvedProfile.category }),
+      });
+
+      console.log("✅ Backend schemes:", data);
+
       const schemes = (data.schemes || []).map((s: any) => ({
         id: s._id,
         name: s.schemeName,
@@ -91,13 +146,22 @@ export function EligibilityDashboard() {
         deadline: s.deadlineLabel || s.deadline || "See details",
         description: s.description || s.schemeName,
         category: s.categoryRequired?.[0] || "General",
-        eligibility: [s.stateEligibility?.[0] || "All India", `Income: ${s.incomeLimit || "As specified"}`],
+        eligibility: [
+          s.stateEligibility?.[0] || "All India",
+          `Income: ${s.incomeLimitLabel || "As specified"}`,
+        ],
       }));
+
       setScholarships(schemes.length ? schemes : getFallbackScholarships());
-    } catch {
+      setMlUsed(false);
+
+    } catch (err) {
+      console.error("❌ Backend API also failed:", err);
       setScholarships(getFallbackScholarships());
       setError("Could not connect to server. Showing sample data.");
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getFallbackScholarships = (): Scholarship[] => [
@@ -123,12 +187,18 @@ export function EligibilityDashboard() {
           <div>
             <h1 className="text-4xl mb-2">Your Eligible Scholarships</h1>
             <p className="text-xl text-muted-foreground">
-              {mlUsed ? "🤖 AI-ranked matches for your profile" : "Showing scholarships matched to your profile"}
+              {mlUsed
+                ? "🤖 AI-ranked matches for your profile"
+                : "Showing scholarships matched to your profile"}
             </p>
           </div>
-          <button onClick={loadScholarships} disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-sm">
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />Refresh
+          <button
+            onClick={() => loadScholarships()}
+            disabled={loading}
+            className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-sm"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
           </button>
         </div>
 
@@ -147,7 +217,8 @@ export function EligibilityDashboard() {
           ].map(stat => (
             <div key={stat.label} className="bg-white rounded-xl p-6 shadow-sm border border-border">
               <div className="flex items-center justify-between">
-                <div><p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
                   <p className={`text-3xl ${stat.color}`}>{loading ? "—" : stat.value}</p>
                 </div>
                 <div className={`p-3 ${stat.bg} rounded-xl`}>{stat.icon}</div>
@@ -160,8 +231,13 @@ export function EligibilityDashboard() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <input type="text" placeholder="Search scholarships..." value={search} onChange={e => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-input-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" />
+              <input
+                type="text"
+                placeholder="Search scholarships..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-input-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              />
             </div>
             <button className="flex items-center gap-2 px-6 py-3 border border-border rounded-lg hover:bg-primary/5 hover:border-primary transition-all">
               <Filter className="w-5 h-5" /><span>Filters</span>
@@ -218,8 +294,10 @@ export function EligibilityDashboard() {
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <Link to={`/scholarship/${scholarship.id}`}
-                      className="flex-1 text-center px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg hover:shadow-lg transition-all">
+                    <Link
+                      to={`/scholarship/${scholarship.id}`}
+                      className="flex-1 text-center px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg hover:shadow-lg transition-all"
+                    >
                       View Details & Apply
                     </Link>
                     <button className="px-6 py-3 border-2 border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all">
