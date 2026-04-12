@@ -66,7 +66,7 @@ export function Navbar() {
                   Login
                 </Link>
                 <Link
-                  to="/student-details"
+                  to="/login"
                   className="px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-lg text-sm hover:shadow-lg transition-all"
                 >
                   Get Started

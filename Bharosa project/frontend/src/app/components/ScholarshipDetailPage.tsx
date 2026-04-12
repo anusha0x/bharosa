@@ -163,10 +163,18 @@ export function ScholarshipDetailPage() {
                 <Play className="w-6 h-6 text-primary" />
                 How to Apply - Video Tutorial
               </h2>
-              <div className="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl flex items-center justify-center">
-                <button className="w-20 h-20 bg-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform">
-                  <Play className="w-10 h-10 text-primary ml-1" />
-                </button>
+              <div className="aspect-video rounded-xl overflow-hidden">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src="https://www.youtube.com/embed/_mHYHCJyKkY?si=EAEj454vqGzbPHXN"
+                  title="How to Apply - Video Tutorial"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                  className="w-full h-full"
+                ></iframe>
               </div>
               <p className="text-sm text-muted-foreground mt-3">
                 Watch this step-by-step guide to understand the application process

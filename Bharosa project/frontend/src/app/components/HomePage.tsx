@@ -21,7 +21,7 @@ export function HomePage() {
             <h1 className="text-5xl md:text-6xl mb-4 font-bold">Find the Scholarships You Truly Qualify For</h1>
             <p className="text-xl md:text-2xl mb-8 text-white/90">Discover, Apply, and Track scholarships designed for you</p>
             <Link
-              to="/student-details"
+              to="/login"
               className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary rounded-full hover:bg-white/90 transition-all shadow-xl text-lg font-semibold"
             >
               Get Started <ArrowRight className="w-5 h-5" />
@@ -144,7 +144,7 @@ export function HomePage() {
         <div className="max-w-4xl mx-auto text-center px-4">
           <h2 className="text-4xl md:text-5xl text-white mb-6 font-bold">Ready to Find Your Perfect Scholarship?</h2>
           <p className="text-xl text-white/90 mb-8">Join thousands of students who have successfully secured scholarships through BHAROSA</p>
-          <Link to="/student-details"
+          <Link to="/login"
             className="inline-flex items-center gap-2 px-10 py-5 bg-white text-primary rounded-full hover:bg-white/90 transition-all shadow-2xl text-lg font-semibold">
             Get Started Now <ArrowRight className="w-6 h-6" />
           </Link>
