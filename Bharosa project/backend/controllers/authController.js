@@ -75,7 +75,7 @@ const sendOTP = async (req, res, next) => {
       success: true,
       message: `OTP sent to ${mobile}.`,
       // REMOVE in production:
-      devOtp: process.env.NODE_ENV === 'development' ? otp : undefined,
+      devOtp: otp, // demo mode
     });
   } catch (err) {
     next(err);
