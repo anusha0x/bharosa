@@ -14,7 +14,17 @@ connectDB();
 // ─── Middleware ──────────────────────────────────────────────────────────────
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: function (origin, callback) {
+      const allowed = [
+        process.env.FRONTEND_URL,
+        'http://localhost:5173',
+      ];
+      if (!origin || allowed.includes(origin) || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   })
 );
