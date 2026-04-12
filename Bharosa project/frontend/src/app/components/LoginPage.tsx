@@ -35,7 +35,7 @@ export function LoginPage() {
     try {
       const data = await verifyOTP(phone, otp);
       login(data.token, data.user);
-      navigate("/student-details");
+      navigate("/digilocker");
     } catch (err: any) {
       setError(err.message || "Invalid OTP. Please try again.");
     } finally { setLoading(false); }
