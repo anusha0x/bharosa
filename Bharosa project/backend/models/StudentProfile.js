@@ -10,6 +10,12 @@ const studentProfileSchema = new mongoose.Schema(
     },
     name: { type: String, required: true, trim: true },
     mobile: { type: String },
+    // Add this to your schema
+    gender: {
+        type: String,
+        enum: ['Male', 'Female', 'Other'],
+        required: true,
+    },
     state: {
       type: String,
       required: true,

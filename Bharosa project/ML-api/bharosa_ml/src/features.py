@@ -81,6 +81,17 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     }
     features["category_score"] = df["category"].map(category_weights).fillna(0.65)
 
+
+    # ── Feature 11: Gender Weight ─────────────────────────────────────────────
+    # Similar to category, certain genders may have different historical 
+    # approval rates or specific scheme focuses (e.g., female-only scholarships).
+    gender_weights = {
+        "Female": 0.85,  # Higher weight for female-specific initiatives
+        "Male": 0.75,
+        "Other": 0.80,
+    }
+    features["gender_score"] = df["gender"].map(gender_weights).fillna(0.70)
+
     # ── Feature 8: Is Low Income ──────────────────────────────────────────────
     # Binary flag: income below 1.5 lakh = typically prioritized
     features["is_low_income"] = (df["income"] < 150000).astype(int)
@@ -130,6 +141,7 @@ def get_feature_columns():
         "is_low_income",
         "state_match",
         "income_doc_interaction",
+        "gender_score",
     ]
 
 

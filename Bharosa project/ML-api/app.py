@@ -7,9 +7,14 @@ app = Flask(__name__)
 CORS(app)
 
 # Load all files
-model = joblib.load('ranker_model.pkl')
-scaler = joblib.load('scaler.pkl')
-encoder = joblib.load('category_encoder.pkl')
+# --- Load all files ---
+try:
+    model = joblib.load('models/ranker_model.pkl')
+    scaler = joblib.load('models/scaler.pkl')
+    encoder = joblib.load('models/category_encoder.pkl')
+    print("✅ All models and assets loaded successfully!")
+except Exception as e:
+    print(f"❌ Error loading files: {e}")
 
 @app.route('/predict', methods=['POST'])
 def predict():

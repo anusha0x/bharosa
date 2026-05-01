@@ -24,7 +24,7 @@ export function StudentDetailsForm() {
   const [error, setError] = useState("");
   const [validationError, setValidationError] = useState("");
   const [formData, setFormData] = useState({
-    name: "", state: "", academicYear: "", category: "", income: "", parentJob: "",
+    name: "", state: "", academicYear: "", category: "", income: "", parentJob: "", gender: "",
   });
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -45,31 +45,38 @@ export function StudentDetailsForm() {
           return false;
         }
         break;
-      case 2:
+      
+      case 2: // New Gender Validation
+        if (!formData.gender) {
+          setValidationError("Please select your gender to continue.");
+          return false;
+        }
+        break;
+      case 3:
         if (!formData.state) {
           setValidationError("Please select your state to continue.");
           return false;
         }
         break;
-      case 3:
+      case 4:
         if (!formData.academicYear) {
           setValidationError("Please select your academic year to continue.");
           return false;
         }
         break;
-      case 4:
+      case 5:
         if (!formData.category) {
           setValidationError("Please select your category to continue.");
           return false;
         }
         break;
-      case 5:
+      case 6:
         if (!formData.income) {
           setValidationError("Please select your family income range to continue.");
           return false;
         }
         break;
-      case 6:
+      case 7:
         if (!formData.parentJob) {
           setValidationError("Please select your parent's occupation to continue.");
           return false;
@@ -99,6 +106,7 @@ export function StudentDetailsForm() {
     setLoading(true); setError("");
     const payload = {
       name: formData.name,
+      gender: formData.gender,
       state: formData.state,
       academicYear: formData.academicYear,
       category: formData.category,
@@ -173,6 +181,26 @@ export function StudentDetailsForm() {
             {step === 2 && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-primary/10 rounded-xl"><Users className="w-6 h-6 text-primary" /></div>
+                  <div>
+                    <h3 className="text-xl font-semibold">Gender</h3>
+                    <p className="text-sm text-muted-foreground">Select your gender <span className="text-red-500">*</span></p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  {["Male", "Female", "Other"].map((g) => (
+                    <button key={g} onClick={() => updateFormData("gender", g)}
+                      className={`p-4 rounded-xl border-2 transition-all font-medium ${formData.gender === g ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/50"}`}>
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 mb-6">
                   <div className="p-3 bg-secondary/10 rounded-xl"><MapPin className="w-6 h-6 text-secondary" /></div>
                   <div>
                     <h3 className="text-xl font-semibold">Location</h3>
@@ -192,7 +220,7 @@ export function StudentDetailsForm() {
               </div>
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-3 bg-accent/10 rounded-xl"><GraduationCap className="w-6 h-6 text-accent" /></div>
@@ -214,7 +242,7 @@ export function StudentDetailsForm() {
               </div>
             )}
 
-            {step === 4 && (
+            {step === 5 && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-3 bg-primary/10 rounded-xl"><Users className="w-6 h-6 text-primary" /></div>
@@ -234,7 +262,7 @@ export function StudentDetailsForm() {
               </div>
             )}
 
-            {step === 5 && (
+            {step === 6 && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-3 bg-secondary/10 rounded-xl"><Wallet className="w-6 h-6 text-secondary" /></div>
@@ -254,7 +282,7 @@ export function StudentDetailsForm() {
               </div>
             )}
 
-            {step === 6 && (
+            {step === 7 && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-3 bg-accent/10 rounded-xl"><Briefcase className="w-6 h-6 text-accent" /></div>

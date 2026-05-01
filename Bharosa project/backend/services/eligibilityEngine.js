@@ -68,13 +68,19 @@ function calculateEligibility(student, scheme) {
   }
 
   // 5. Gender check (5 points)
-  const genderEligible =
-    scheme.genderEligibility === 'All' ||
-    scheme.genderEligibility === student.gender;
+  const genderTarget = scheme.genderEligibility || 'All';
+  const genderEligible = genderTarget === 'All' || genderTarget === student.gender;
+
   if (genderEligible) {
-    score += 5;
+    if (genderTarget !== 'All') {
+      score += 5;
+      reasons.push(`Specialized scholarship for ${student.gender} candidates.`);
+    } else {
+      score += 2; // Default point for general eligibility
+    }
   } else {
-    mismatches.push(`Scheme is for ${scheme.genderEligibility} students only.`);
+    mismatches.push(`This scheme is exclusively for ${genderTarget} students.`);
+    // HARD EXIT: Disqualify immediately if gender doesn't match a specific target.
     return { eligible: false, matchScore: 0, whyEligible: [], whyNotEligible: mismatches };
   }
 

@@ -7,7 +7,7 @@ export interface StudentProfileData {
   category: string;
   income: string;
   parentJob: string;
-  gender?: string;
+  gender: string;
   dateOfBirth?: string;
   religion?: string;
   annualIncome?: number;
