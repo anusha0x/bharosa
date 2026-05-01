@@ -16,8 +16,9 @@ app.use(
   cors({
     origin: function (origin, callback) {
       const allowed = [
-        process.env.FRONTEND_URL,
-        'http://localhost:5173',
+        'http://localhost:5173', // For your local testing
+        'https://bharosa-scholarship-hd0vxndl3-anusha0xs-projects.vercel.app', // Your specific Vercel link
+        /\.vercel\.app$/ // This regex allows ANY preview link from Vercel
       ];
       if (!origin || allowed.includes(origin) || origin.endsWith('.vercel.app')) {
         callback(null, true);
